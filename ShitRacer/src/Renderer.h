@@ -6,7 +6,7 @@ namespace HTM
 	{
 	public:
 		Renderer() = default;
-		~Renderer();
+		//~Renderer();
 
 		void Render();
 	private:
