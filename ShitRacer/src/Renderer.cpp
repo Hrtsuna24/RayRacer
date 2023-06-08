@@ -6,12 +6,26 @@ namespace HTM
 	void Renderer::Render()
 	{
 		//	render every pixel
+		
 		for (
-			uint32_t i = 0;
-			i < m_FinalImage->GetWidth() * m_FinalImage->GetHeight();
-			i++)
+			uint32_t y = 0;
+			y < m_FinalImage->GetHeight();
+			y++)
 		{
-			m_FinalImageData[i] = Walnut::Random::UInt() | 0xff000000;
+			for (
+				uint32_t x = 0;
+				x < m_FinalImage->GetWidth();
+				x++)
+			{
+				glm::vec2 coord = {
+					x / (float)m_FinalImage->GetWidth(),
+					y / (float)m_FinalImage->GetHeight()
+				};
+
+				
+
+				m_FinalImageData[x + y * m_FinalImage->GetWidth()] = PerPixel(coord); // Set pixel
+			}
 		}
 
 		m_FinalImage->SetData(m_FinalImageData);
@@ -40,5 +54,17 @@ namespace HTM
 
 		delete[]m_FinalImageData; // clear buffer
 		m_FinalImageData = new uint32_t[ wh[1] * wh[0] ]; //R G B A -> 4
+	}
+
+
+	uint32_t Renderer::PerPixel(glm::vec2 coord)
+	{
+		uint8_t
+			r{ static_cast<uint8_t>(coord.x * 255.f) },
+			b{},
+			g{ static_cast<uint8_t>(coord.y * 255.f) },
+			a{}
+		;
+		return 0xff000000 | (g <<8) | r;
 	}
 }

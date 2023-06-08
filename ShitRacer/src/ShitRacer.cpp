@@ -35,11 +35,18 @@ public:
 		const auto im = m_renderer.GetFinalImage();
 		if (im)
 		{
-			ImGui::Image(im->GetDescriptorSet(), { float(im->GetWidth()), float(im->GetHeight()) });
+			ImGui::Image(
+				im->GetDescriptorSet(),
+				{ float(im->GetWidth()), float(im->GetHeight()) },
+				ImVec2(0,1),
+				ImVec2(1,0)
+			);
 		}
 		
 		ImGui::End();
 		ImGui::PopStyleVar();
+
+		Render();
 	}
 
 	void Render()
