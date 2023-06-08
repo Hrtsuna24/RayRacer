@@ -5,18 +5,11 @@ namespace HTM
 	class Renderer
 	{
 	public:
-		Renderer();
+		Renderer() = default;
 		~Renderer();
 
+		void Render();
 	private:
 
 	};
-
-	Renderer::Renderer()
-	{
-	}
-
-	Renderer::~Renderer()
-	{
-	}
 }
