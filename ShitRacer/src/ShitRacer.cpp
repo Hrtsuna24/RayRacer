@@ -1,12 +1,9 @@
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
 
-#include "Walnut/Image.h"
-#include "Walnut/Random.h"
 #include "Walnut/Timer.h"
 
 #include "Renderer.h"
-#include "Camera.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -32,12 +29,13 @@ public:
 
 		ImGui::Begin("Viewport");
 
-		m_ViewportWidth = ImGui::GetContentRegionAvail().x;
-		m_ViewportHeight = ImGui::GetContentRegionAvail().y;
+		m_ViewportWidth = static_cast<uint32_t>(ImGui::GetContentRegionAvail().x);
+		m_ViewportHeight = static_cast<uint32_t>(ImGui::GetContentRegionAvail().y);
 
-		if (m_Image)
+		const auto im = m_renderer.GetFinalImage();
+		if (im)
 		{
-			ImGui::Image(m_Image->GetDescriptorSet(), { float(m_Image->GetWidth()), float(m_Image->GetHeight()) });
+			ImGui::Image(im->GetDescriptorSet(), { float(im->GetWidth()), float(im->GetHeight()) });
 		}
 		
 		ImGui::End();
@@ -48,36 +46,22 @@ public:
 	{
 		Timer timer;
 
-		uint32_t tmp_NewImDataSize = m_ViewportWidth * m_ViewportHeight;
+		// Change Size of Image
+		uint32_t tmp_WH[2]{ m_ViewportWidth , m_ViewportHeight };
+		m_renderer.OnResize(tmp_WH);
 
-		if (!m_Image ||
-			m_ViewportWidth != m_Image->GetWidth() ||
-			m_ViewportHeight != m_Image->GetHeight())
-		{
-			m_Image = std::make_shared<Image>(m_ViewportWidth, m_ViewportHeight, ImageFormat::RGBA);
-						
-			delete[]m_ImageData;
-			m_ImageData = new uint32_t[tmp_NewImDataSize]; //R G B A -> 4
-		}
+		// Draw Image
+		m_renderer.Render();
 
-		for (size_t index{ 0 }; index < tmp_NewImDataSize; ++index)
-		{
-			m_ImageData[index] = Random::UInt();
-			m_ImageData[index] |= 0xff000000;
-		}
-
-		m_Image->SetData(m_ImageData);
 
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
 
 private:
-	std::shared_ptr<Image> m_Image{};
+	HTM::Renderer m_renderer{};
 
 	uint32_t m_ViewportWidth{},
-		m_ViewportHeight{},
-	
-		*m_ImageData{nullptr}
+		m_ViewportHeight{}
 	;
 
 	float m_LastRenderTime{};
