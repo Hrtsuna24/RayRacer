@@ -13,7 +13,7 @@ namespace HTM
 		Renderer() = default;
 		//~Renderer();
 
-		void OnResize(uint32_t[2]);
+		void OnResize(uint32_t, uint32_t);
 		void Render();
 
 		const std::shared_ptr<Walnut::Image>& GetFinalImage() const;

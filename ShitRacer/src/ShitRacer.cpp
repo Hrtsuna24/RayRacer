@@ -54,8 +54,7 @@ public:
 		Timer timer;
 
 		// Change Size of Image
-		uint32_t tmp_WH[2]{ m_ViewportWidth , m_ViewportHeight };
-		m_renderer.OnResize(tmp_WH);
+		m_renderer.OnResize(m_ViewportWidth, m_ViewportHeight);
 
 		// Draw Image
 		m_renderer.Render();
