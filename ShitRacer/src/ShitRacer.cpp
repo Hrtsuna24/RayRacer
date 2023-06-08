@@ -2,6 +2,7 @@
 #include "Walnut/EntryPoint.h"
 
 #include "Walnut/Image.h"
+#include "Walnut/Random.h"
 #include "Walnut/Timer.h"
 
 #include "Renderer.h"
@@ -18,6 +19,8 @@ public:
 	{
 		ImGui::Begin("Settings");
 		
+		ImGui::Text("Last Render : %.3fms", m_LastRenderTime);
+
 		if(ImGui::Button("Render"))
 		{
 			Render();
@@ -25,16 +28,26 @@ public:
 
 		ImGui::End();
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
+
 		ImGui::Begin("Viewport");
 
 		m_ViewportWidth = ImGui::GetContentRegionAvail().x;
 		m_ViewportHeight = ImGui::GetContentRegionAvail().y;
 
+		if (m_Image)
+		{
+			ImGui::Image(m_Image->GetDescriptorSet(), { float(m_Image->GetWidth()), float(m_Image->GetHeight()) });
+		}
+		
 		ImGui::End();
+		ImGui::PopStyleVar();
 	}
 
 	void Render()
 	{
+		Timer timer;
+
 		uint32_t tmp_NewImDataSize = m_ViewportWidth * m_ViewportHeight;
 
 		if (!m_Image ||
@@ -49,8 +62,13 @@ public:
 
 		for (size_t index{ 0 }; index < tmp_NewImDataSize; ++index)
 		{
-
+			m_ImageData[index] = Random::UInt();
+			m_ImageData[index] |= 0xff000000;
 		}
+
+		m_Image->SetData(m_ImageData);
+
+		m_LastRenderTime = timer.ElapsedMillis();
 	}
 
 private:
@@ -61,6 +79,8 @@ private:
 	
 		*m_ImageData{nullptr}
 	;
+
+	float m_LastRenderTime{};
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
