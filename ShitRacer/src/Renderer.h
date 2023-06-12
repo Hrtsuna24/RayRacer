@@ -23,6 +23,6 @@ namespace HTM
 		std::shared_ptr<Image> GetFinalImage() const;
 
 	private:
-		uint32_t PerPixel(glm::vec2);
+		glm::vec4 PerPixel(glm::vec2);
 	};
 }
