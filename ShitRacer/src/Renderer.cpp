@@ -62,7 +62,7 @@ std::shared_ptr<Image> HTM::Renderer::GetFinalImage() const
 
 glm::vec4 HTM::Renderer::PerPixel(glm::vec2 coord)
 {
-	glm::vec3 rayOrigin(0.0f, 0.0f, -2.0f);
+	glm::vec3 rayOrigin(0.0f, 0.0f, 1.0f);
 	glm::vec3 rayDirection(coord.x, coord.y, -1.0f);
 	//rayDirection = glm::normalize(rayDirection);
 	float radius = 0.5f;
@@ -96,5 +96,13 @@ glm::vec4 HTM::Renderer::PerPixel(glm::vec2 coord)
 		hitPoint = rayOrigin + rayDirection * closestT;
 	}
 
-	return glm::vec4{ hitPoint , 1.0f };
+	glm::vec3 normal = glm::normalize(hitPoint);
+
+	glm::vec3 lightDirecton = glm::normalize(glm::vec3(-1, -1, -1));
+
+	float d = glm::max(glm::dot(normal, -lightDirecton), 0.0f);// cos(angel) between n and lD
+
+	glm::vec3 sc{1, 0, 1};
+	sc *= d;
+	return glm::vec4{ sc , 1.0f };
 }
