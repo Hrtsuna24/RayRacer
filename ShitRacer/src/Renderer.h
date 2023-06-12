@@ -1,28 +1,28 @@
 #pragma once
-
-#include "Walnut\Image.h"
-#include <glm/gtc/type_ptr.hpp>
+#include "Walnut/Image.h"
+using Walnut::Image;
+using Walnut::ImageFormat;
 
 #include <memory>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace HTM
 {
 	class Renderer
 	{
+		std::shared_ptr<Image> m_FinalImage{};
+		
+		uint32_t* m_ImageData{ nullptr };
+
 	public:
 		Renderer() = default;
-		//~Renderer();
 
 		void OnResize(uint32_t, uint32_t);
 		void Render();
 
-		const std::shared_ptr<Walnut::Image>& GetFinalImage() const;
-	private:
-		uint32_t PerPixel(glm::vec2 coord);
+		std::shared_ptr<Image> GetFinalImage() const;
 
 	private:
-		std::shared_ptr<Walnut::Image> m_FinalImage{};
-		uint32_t* m_FinalImageData{ nullptr }
-		;
+		uint32_t PerPixel(glm::vec2);
 	};
 }

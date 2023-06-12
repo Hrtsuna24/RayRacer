@@ -1,98 +1,70 @@
 #include "Renderer.h"
-#include "Walnut/Random.h"
 
-namespace HTM
+
+void HTM::Renderer::Render()
 {
-	void Renderer::Render()
+	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
-		//	render every pixel
+		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++)
+		{
+			glm::vec2 coord{
+				(float)x / (float)m_FinalImage->GetWidth(),
+				(float)y / (float)m_FinalImage->GetHeight()
+			};
+			coord = coord * 2.0f - 1.0f;
+
+			m_ImageData[x + y * m_FinalImage->GetWidth()] = PerPixel(coord);
+		}
+	}
+
+	m_FinalImage->SetData(m_ImageData);
+}
+
+void HTM::Renderer::OnResize(uint32_t w, uint32_t h)
+{
+	if (m_FinalImage)
+	{
+		if (m_FinalImage->GetHeight() == h && m_FinalImage->GetWidth() == w)
+			return;
 		
-		for (
-			uint32_t y = 0;
-			y < m_FinalImage->GetHeight();
-			y++)
-		{
-			for (
-				uint32_t x = 0;
-				x < m_FinalImage->GetWidth();
-				x++)
-			{
-				glm::vec2 coord = {
-					x / (float)m_FinalImage->GetWidth(),
-					y / (float)m_FinalImage->GetHeight()
-				};
-				coord *= coord * 2.f - 1.f; // map from -1 to 1
-				
-
-				m_FinalImageData[x + y * m_FinalImage->GetWidth()] = PerPixel(coord); // Set pixel
-			}
-		}
-
-		m_FinalImage->SetData(m_FinalImageData);
+		m_FinalImage->Resize(w, h);
+	}
+	else
+	{
+		m_FinalImage = std::make_shared<Image>(
+			w,
+			h,
+			ImageFormat::RGBA);
 	}
 
-	const std::shared_ptr<Walnut::Image>& Renderer::GetFinalImage() const
+	delete[]m_ImageData;
+	m_ImageData = new uint32_t[w * h];
+}
+
+std::shared_ptr<Image> HTM::Renderer::GetFinalImage() const
+{
+	return m_FinalImage;
+}
+
+
+uint32_t HTM::Renderer::PerPixel(glm::vec2 coord)
+{
+	glm::vec3 rayOrigin(0.0f, 0.0f, -2.0f);
+	glm::vec3 rayDirection(coord.x, coord.y, -1.0f);
+	//rayDirection = glm::normalize(rayDirection);
+	float radius = 0.5f;
+	
+	float a = glm::dot(rayDirection, rayDirection);
+	float b = 2.0f * glm::dot(rayOrigin, rayDirection);
+	float c = glm::dot(rayOrigin, rayOrigin) - radius * radius;
+
+	float dicriminant = b * b - 4.0f * a * c;
+	if (dicriminant >= 0.0f)
 	{
-		// TODO: insert return statement here
-		return m_FinalImage;
+		return 0xffff00ff;
 	}
-
-
-	void Renderer::OnResize(uint32_t w, uint32_t h)
+	else
 	{
-
-		if (m_FinalImage) // if exist
-		{
-			if (m_FinalImage->GetWidth() == w && m_FinalImage->GetHeight() == h) return; // no resize neccesary
-
-			m_FinalImage->Resize(w, h); //...change the size
-		}
-		else
-		{
-			m_FinalImage = std::make_shared<Walnut::Image>(w, h, Walnut::ImageFormat::RGBA); // ...else create with new param
-		}
-
-		delete[]m_FinalImageData; // clear buffer
-		m_FinalImageData = new uint32_t[ w * h ]; //R G B A -> 4
-	}
-
-
-	uint32_t Renderer::PerPixel(glm::vec2 coord)
-	{
-		glm::vec3 rayDirection{ coord.x , coord.y , -1.0f };
-		glm::vec3 rayOrigin(0.0f, 0.0f, 2.0f);
-		rayDirection = glm::normalize(rayDirection);
-		// 
-		//sphere
-		// (b *(x*x + y*y)) * t * t + 2*t*(a*b* (x*x + y*y) ) + (a * (x*x + y*y) - r * r) = 0
-		
-		// a = ray origin
-		// b = ray direction
-		// r radius of sphere
-		// t = hit distance
-
-		float a = glm::dot(rayDirection, rayDirection);
-			/*{rayDirection.x * rayDirection.x +
-			rayDirection.y * rayDirection.y +
-			rayDirection.z * rayDirection.z }
-			*/
-		float b = 2.0f * glm::dot(rayOrigin, rayDirection);
-		float radius = 0.5f ;
-		float c = glm::dot(rayOrigin, rayOrigin) - radius * radius;
-
-		//discrim: b^2 - 4ac
-		float discriminant{ b * b - 4.0f * a * c };
-		uint32_t res{};
-
-		if (discriminant >= 0.0f)
-		{
-			return 0xffff00ff;
-		}
-		else
-		{
-			res = 0xff000000;
-		}
-
 		return 0xff000000;
 	}
 }

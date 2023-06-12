@@ -4,10 +4,16 @@
 #include "Walnut/Timer.h"
 
 #include "Renderer.h"
+using HTM::Renderer;
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <memory>
+
+
+#include "Walnut/Image.h"
 using namespace Walnut;
+
 
 class ExampleLayer : public Walnut::Layer
 {
@@ -25,27 +31,23 @@ public:
 
 		ImGui::End();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
-
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Viewport");
 
-		m_ViewportWidth = static_cast<uint32_t>(ImGui::GetContentRegionAvail().x);
-		m_ViewportHeight = static_cast<uint32_t>(ImGui::GetContentRegionAvail().y);
+		m_Viewport_Width = ImGui::GetContentRegionAvail().x;
+		m_Viewport_Heigth = ImGui::GetContentRegionAvail().y;
 
-		const auto im = m_renderer.GetFinalImage();
+		auto im = m_Renderer.GetFinalImage();
 		if (im)
 		{
 			ImGui::Image(
 				im->GetDescriptorSet(),
 				{ float(im->GetWidth()), float(im->GetHeight()) },
-				ImVec2(0,1),
-				ImVec2(1,0)
-			);
+				ImVec2(0, 1), ImVec2(1, 0));
 		}
-		
+
 		ImGui::End();
 		ImGui::PopStyleVar();
-
 		Render();
 	}
 
@@ -53,22 +55,18 @@ public:
 	{
 		Timer timer;
 
-		// Change Size of Image
-		m_renderer.OnResize(m_ViewportWidth, m_ViewportHeight);
-
-		// Draw Image
-		m_renderer.Render();
-
+		m_Renderer.OnResize(m_Viewport_Width, m_Viewport_Heigth);
+		m_Renderer.Render();
 
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
 
 private:
-	HTM::Renderer m_renderer{};
+	Renderer m_Renderer{};
 
-	uint32_t m_ViewportWidth{},
-		m_ViewportHeight{}
-	;
+	uint32_t
+		m_Viewport_Width{},
+		m_Viewport_Heigth{};
 
 	float m_LastRenderTime{};
 };
