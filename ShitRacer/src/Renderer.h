@@ -7,6 +7,7 @@ using Walnut::ImageFormat;
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.h"
 #include "Ray.h"
+#include "Scene.h"
 
 namespace HTM
 {
@@ -20,11 +21,11 @@ namespace HTM
 		Renderer() = default;
 
 		void OnResize(uint32_t, uint32_t);
-		void Render(const Camera&);
+		void Render(const Scene&, const Camera&);
 
 		std::shared_ptr<Image> GetFinalImage() const;
 
 	private:
-		glm::vec4 TraceRay(const Ray&);
+		glm::vec4 TraceRay(const Scene&, const Ray&);
 	};
 }

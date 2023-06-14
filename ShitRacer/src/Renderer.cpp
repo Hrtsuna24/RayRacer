@@ -14,7 +14,7 @@ namespace Utils
 	}
 }
 
-void HTM::Renderer::Render(const Camera& camera)
+void HTM::Renderer::Render(const Scene& scene, const Camera& camera)
 {
 	Ray ray;
 	ray.Origin = camera.GetPosition();
@@ -24,7 +24,7 @@ void HTM::Renderer::Render(const Camera& camera)
 		{
 			ray.Direction = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
 
-			glm::vec4 color{ TraceRay(ray) };
+			glm::vec4 color{ TraceRay(scene, ray) };
 			color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
 			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(color);
 		}
@@ -60,39 +60,64 @@ std::shared_ptr<Image> HTM::Renderer::GetFinalImage() const
 }
 
 
-glm::vec4 HTM::Renderer::TraceRay(const Ray& ray)
+glm::vec4 HTM::Renderer::TraceRay(const Scene& scene, const Ray& ray)
 {
 	//rayDirection = glm::normalize(rayDirection);
-	float radius = 0.5f;
-	
-	float a = glm::dot(ray.Direction, ray.Direction);
-	float b = 2.0f * glm::dot(ray.Origin, ray.Direction);
-	float c = glm::dot(ray.Origin, ray.Origin) - radius * radius;
-
-	float dicriminant = b * b - 4.0f * a * c;
-	if (dicriminant < 0.0f)
-	{
+	if (scene.spheres.empty())
 		return glm::vec4{ 0, 0, 0, 1 };
-	}
-	
-	float t0{}, closestT{};
-	glm::vec3 h0{}, hitPoint{};
-	if (dicriminant == 0.0f)
-	{
-		t0 = -b / (2.0f * a);
-		closestT = t0;
 
-		h0 = ray.Origin + ray.Direction * t0;
-		hitPoint = h0;
-	}
-	else
-	{
-		t0 = (-b + glm::sqrt(dicriminant)) / (2.0f * a);
-		closestT = (-b - glm::sqrt(dicriminant)) / (2.0f * a);
+	const Sphere* closestSphere = nullptr;
+	float hitDistance = std::numeric_limits<float>::max();
 
-		h0 = ray.Origin + ray.Direction * t0;
-		hitPoint = ray.Origin + ray.Direction * closestT;
+	for (const Sphere& sphere : scene.spheres)
+	{
+		
+		const float& radius = sphere.Radius;
+
+		glm::vec3 origin = ray.Origin - sphere.Position;
+
+		float a = glm::dot(ray.Direction, ray.Direction);
+		float b = 2.0f * glm::dot(origin, ray.Direction);
+		float c = glm::dot(origin, origin) - radius * radius;
+
+		float dicriminant = b * b - 4.0f * a * c;
+		if (dicriminant < 0.0f)
+		{
+			continue;
+		}
+
+		float t0, closestt;
+		glm::vec3 h0, hitpoint;
+		if (dicriminant == 0.0f)
+		{
+			t0 = -b / (2.0f * a);
+			closestt = t0;
+
+			h0 = origin + ray.Direction * t0;
+			hitpoint = h0;
+		}
+		else
+		{
+			//t0 = (-b + glm::sqrt(dicriminant)) / (2.0f * a);
+			closestt = (-b - glm::sqrt(dicriminant)) / (2.0f * a);
+
+			//h0 = origin + ray.Direction * t0;
+			hitpoint = origin + ray.Direction * closestt;
+		}
+		if (closestt < hitDistance)
+		{
+			closestSphere = &sphere;
+			hitDistance = closestt;
+		}
+		
 	}
+
+	if (!closestSphere) 
+		return glm::vec4{ 0, 0, 0, 1 };
+
+	glm::vec3 hitPoint;
+	glm::vec3 origin = ray.Origin - closestSphere->Position;
+	hitPoint = origin + ray.Direction * hitDistance;
 
 	glm::vec3 normal = glm::normalize(hitPoint);
 
@@ -100,7 +125,7 @@ glm::vec4 HTM::Renderer::TraceRay(const Ray& ray)
 
 	float d = glm::max(glm::dot(normal, -lightDirecton), 0.0f);// cos(angel) between n and lD
 
-	glm::vec3 sc{1, 0, 1};
+	glm::vec3 sc = closestSphere->Albedo;
 	sc *= d;
 	return glm::vec4{ sc , 1.0f };
 }

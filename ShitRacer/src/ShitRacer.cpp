@@ -18,7 +18,14 @@ using namespace Walnut;
 class ExampleLayer : public Walnut::Layer
 {
 public:
-	ExampleLayer() : m_Camera(45.f,0.1f, 100.f){};
+	ExampleLayer() : m_Camera(45.f,0.1f, 100.f)
+	{
+		m_Scene.spheres.push_back(Sphere{ glm::vec3{0.f,2.f,0.f}, 0.75f,   glm::vec3{1.0f, 0.f,1.0f } });
+
+		Sphere tmp;
+		tmp.Albedo = { 1.f, 1.f,0.f };
+		m_Scene.spheres.push_back(tmp);
+	};
 
 	virtual void OnUpdate(float ts) override
 	{
@@ -37,7 +44,26 @@ public:
 		}
 
 		ImGui::End();
+		
+		////
+		ImGui::Begin("Scene");
 
+		for (size_t i = 0; i < m_Scene.spheres.size(); ++i)
+		{
+			ImGui::PushID(i);
+
+			Sphere& sphere = m_Scene.spheres[i];
+			ImGui::DragFloat3("Position", glm::value_ptr(sphere.Position), 0.1f);
+			ImGui::DragFloat("Radius", &sphere.Radius, 0.1f);
+			ImGui::ColorEdit3("Position", glm::value_ptr(sphere.Albedo), 0.1f);
+
+			ImGui::Separator();
+			ImGui::PopID();
+		}
+
+		ImGui::End();
+		//////
+		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Viewport");
 
@@ -64,7 +90,7 @@ public:
 
 		m_Renderer.OnResize(m_Viewport_Width, m_Viewport_Heigth);
 		m_Camera.OnResize(m_Viewport_Width, m_Viewport_Heigth);
-		m_Renderer.Render(m_Camera);
+		m_Renderer.Render(m_Scene, m_Camera);
 
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
@@ -72,7 +98,7 @@ public:
 private:
 	Renderer m_Renderer{};
 	Camera m_Camera;
-
+	Scene m_Scene;
 	uint32_t
 		m_Viewport_Width{},
 		m_Viewport_Heigth{};
