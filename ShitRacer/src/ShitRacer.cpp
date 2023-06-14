@@ -9,7 +9,7 @@ using HTM::Renderer;
 #include <glm/gtc/type_ptr.hpp>
 
 #include <memory>
-
+#include "Camera.h"
 
 #include "Walnut/Image.h"
 using namespace Walnut;
@@ -18,6 +18,13 @@ using namespace Walnut;
 class ExampleLayer : public Walnut::Layer
 {
 public:
+	ExampleLayer() : m_Camera(45.f,0.1f, 100.f){};
+
+	virtual void OnUpdate(float ts) override
+	{
+		m_Camera.OnUpdate(ts);
+	}
+
 	virtual void OnUIRender() override
 	{
 		ImGui::Begin("Settings");
@@ -56,13 +63,15 @@ public:
 		Timer timer;
 
 		m_Renderer.OnResize(m_Viewport_Width, m_Viewport_Heigth);
-		m_Renderer.Render();
+		m_Camera.OnResize(m_Viewport_Width, m_Viewport_Heigth);
+		m_Renderer.Render(m_Camera);
 
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
 
 private:
 	Renderer m_Renderer{};
+	Camera m_Camera;
 
 	uint32_t
 		m_Viewport_Width{},
