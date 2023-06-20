@@ -25,6 +25,7 @@ public:
 		Sphere tmp;
 		tmp.Albedo = { 1.f, 1.f,0.f };
 		m_Scene.spheres.push_back(tmp);
+
 	};
 
 	virtual void OnUpdate(float ts) override
