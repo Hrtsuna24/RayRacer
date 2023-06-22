@@ -29,6 +29,8 @@ namespace HTM
 
 		uint32_t m_FrameIndex = 1;
 
+		std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter;
+
 	public:
 		Renderer() = default;
 

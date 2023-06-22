@@ -1,6 +1,8 @@
 #include "Renderer.h"
 #include "Walnut/Random.h"
 
+#include <execution>
+
 namespace Utils
 {
 	static uint32_t ConvertToRGBA(const glm::vec4& color)
@@ -26,6 +28,34 @@ void HTM::Renderer::Render(const Scene& scene, const Camera& camera)
 		memset(m_AccumulationData, 0, m_FinalImage->GetWidth() * m_FinalImage->GetHeight() * sizeof(glm::vec4));
 	}
 
+	#define MT 1
+	#if MT
+	
+	//-2m pixels -> 1920x1080   
+	std::for_each(
+		std::execution::par,
+		m_ImageVerticalIter.begin(),
+		m_ImageVerticalIter.end(),
+		[this](uint32_t y) //1080
+		{
+			std::for_each(
+				std::execution::par,
+				m_ImageHorizontalIter.begin(),
+				m_ImageHorizontalIter.end(),
+				[this, y](uint32_t x) //1080
+				{
+					glm::vec4 color{ PerPixel(x, y) };
+					m_AccumulationData[x + y * m_FinalImage->GetWidth()] += color;
+					
+					glm::vec4 AcumulatedColor = m_AccumulationData[x + y * m_FinalImage->GetWidth()];
+					AcumulatedColor /= float(m_FrameIndex);
+					
+					AcumulatedColor = glm::clamp(AcumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+					m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(AcumulatedColor);
+				});
+		});
+	#else
+
 	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
 		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++)
@@ -40,6 +70,7 @@ void HTM::Renderer::Render(const Scene& scene, const Camera& camera)
 			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(AcumulatedColor);
 		}
 	}
+	#endif
 
 	m_FinalImage->SetData(m_ImageData);
 
@@ -75,6 +106,18 @@ void HTM::Renderer::OnResize(uint32_t w, uint32_t h)
 
 	delete[]m_AccumulationData;
 	m_AccumulationData = new glm::vec4[w * h];
+
+	m_ImageHorizontalIter.resize(w);
+	m_ImageVerticalIter.resize(h);
+
+	for (size_t i = 0; i < w; i++)
+	{
+		m_ImageHorizontalIter[i] = i;
+	}
+	for (size_t i = 0; i < h; i++)
+	{
+		m_ImageVerticalIter[i] = i;
+	}
 }
 
 std::shared_ptr<Image> HTM::Renderer::GetFinalImage() const
