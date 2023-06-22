@@ -13,9 +13,21 @@ namespace HTM
 {
 	class Renderer
 	{
+
+		struct Settings
+		{
+			bool bAccumulate = true;
+		};
+
+		Settings m_Settings;
+
 		std::shared_ptr<Image> m_FinalImage{};
 		
 		uint32_t* m_ImageData{ nullptr };
+
+		glm::vec4* m_AccumulationData{ nullptr };
+
+		uint32_t m_FrameIndex = 1;
 
 	public:
 		Renderer() = default;
@@ -25,6 +37,9 @@ namespace HTM
 
 		std::shared_ptr<Image> GetFinalImage() const;
 
+
+		void ResetFrameIndex() { m_FrameIndex = 1; }
+		Settings& GetSettings() { return m_Settings; }
 	private:
 		struct HitPayload
 		{

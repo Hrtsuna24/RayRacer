@@ -20,17 +20,33 @@ class ExampleLayer : public Walnut::Layer
 public:
 	ExampleLayer() : m_Camera(45.f,0.1f, 100.f)
 	{
-		m_Scene.spheres.push_back(Sphere{ glm::vec3{0.f,2.f,0.f}, 0.75f,   glm::vec3{1.0f, 0.f,1.0f } });
+		Material& pinkSphere =
+			m_Scene.Materials.emplace_back();
+		pinkSphere.Albedo = glm::vec3{ 1.f,0.f,1.f };
+		pinkSphere.Roughness = 0.f;
+
+
+		Material& blueSphere = m_Scene.Materials.emplace_back();
+		blueSphere.Albedo = glm::vec3{ 0.2f,0.3f,1.f };
+		blueSphere.Roughness = 0.1f;
+		
+
+
+		m_Scene.spheres.push_back(Sphere{ glm::vec3{0.f,2.f,0.f}, 0.75f,  size_t(0) });
 
 		Sphere tmp;
-		tmp.Albedo = { 1.f, 1.f,0.f };
+		tmp.MaterialIndex = size_t(1);
+		tmp.Radius = 2.f;
 		m_Scene.spheres.push_back(tmp);
 
 	};
 
 	virtual void OnUpdate(float ts) override
 	{
-		m_Camera.OnUpdate(ts);
+		if (m_Camera.OnUpdate(ts))
+		{
+			m_Renderer.ResetFrameIndex();
+		}
 	}
 
 	virtual void OnUIRender() override
@@ -39,9 +55,16 @@ public:
 		
 		ImGui::Text("Last Render : %.3fms", m_LastRenderTime);
 
+		ImGui::Checkbox("Accumulate", &m_Renderer.GetSettings().bAccumulate);
+
 		if(ImGui::Button("Render"))
 		{
 			Render();
+		}
+
+		if (ImGui::Button("Reset"))
+		{
+			m_Renderer.ResetFrameIndex();
 		}
 
 		ImGui::End();
@@ -56,7 +79,21 @@ public:
 			Sphere& sphere = m_Scene.spheres[i];
 			ImGui::DragFloat3("Position", glm::value_ptr(sphere.Position), 0.1f);
 			ImGui::DragFloat("Radius", &sphere.Radius, 0.1f);
-			ImGui::ColorEdit3("Position", glm::value_ptr(sphere.Albedo), 0.1f);
+			ImGui::DragInt("MaterialIndex", &(int)sphere.MaterialIndex, 1.0f, 0, (int)m_Scene.Materials.size() - 1);
+
+			ImGui::Separator();
+			ImGui::PopID();
+		}
+
+		for (size_t i = 0; i < m_Scene.Materials.size(); ++i)
+		{
+			ImGui::PushID(i);
+
+			Material& material = m_Scene.Materials[i];
+			
+			ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo));
+			ImGui::DragFloat("Roughness", &material.Roughness, 0.05f, 0.f, 1.f);
+			ImGui::DragFloat("Metallic", &material.Metallic, 0.05f, 0.f, 1.f);
 
 			ImGui::Separator();
 			ImGui::PopID();

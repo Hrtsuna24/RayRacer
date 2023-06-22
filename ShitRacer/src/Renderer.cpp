@@ -20,17 +20,37 @@ void HTM::Renderer::Render(const Scene& scene, const Camera& camera)
 	m_Scene = &scene;
 		
 		
+	if (m_FrameIndex == 1)
+	{
+		//m_AccumulationData[x + y * m_FinalImage->GetWidth()] = gkm::vec(0.0f);
+		memset(m_AccumulationData, 0, m_FinalImage->GetWidth() * m_FinalImage->GetHeight() * sizeof(glm::vec4));
+	}
+
 	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
 		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++)
 		{
 			glm::vec4 color{ PerPixel(x, y) };
-			color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
-			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(color);
+			m_AccumulationData[x + y * m_FinalImage->GetWidth()] += color;
+
+			glm::vec4 AcumulatedColor = m_AccumulationData[x + y * m_FinalImage->GetWidth()];
+			AcumulatedColor /= float(m_FrameIndex);
+
+			AcumulatedColor = glm::clamp(AcumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(AcumulatedColor);
 		}
 	}
 
 	m_FinalImage->SetData(m_ImageData);
+
+	if (m_Settings.bAccumulate)
+	{
+		m_FrameIndex++;
+	}
+	else
+	{
+		m_FrameIndex = 1;
+	}
 }
 
 void HTM::Renderer::OnResize(uint32_t w, uint32_t h)
@@ -52,6 +72,9 @@ void HTM::Renderer::OnResize(uint32_t w, uint32_t h)
 
 	delete[]m_ImageData;
 	m_ImageData = new uint32_t[w * h];
+
+	delete[]m_AccumulationData;
+	m_AccumulationData = new glm::vec4[w * h];
 }
 
 std::shared_ptr<Image> HTM::Renderer::GetFinalImage() const
