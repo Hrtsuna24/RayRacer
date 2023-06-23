@@ -9,6 +9,10 @@ struct Material
 	glm::vec3 Albedo{ 1.f };
 	float Roughness{ 1.f };
 	float Metallic{ 0.f };
+	glm::vec3 EmmisionColor{ 0.f };
+	float EmmisionPower{ 0.f };
+
+	glm::vec3 GetEmmision() const {return EmmisionPower* EmmisionColor;}
 };
 
 
