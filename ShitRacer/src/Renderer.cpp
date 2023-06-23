@@ -38,7 +38,7 @@ void HTM::Renderer::Render(const Scene& scene, const Camera& camera)
 		m_ImageVerticalIter.end(),
 		[this](uint32_t y) //1080
 		{
-			#if 0
+			
 			std::for_each(
 				std::execution::par,
 				m_ImageHorizontalIter.begin(),
@@ -54,19 +54,7 @@ void HTM::Renderer::Render(const Scene& scene, const Camera& camera)
 					AcumulatedColor = glm::clamp(AcumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
 					m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(AcumulatedColor);
 				});
-			#else
-			for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++)
-			{
-				glm::vec4 color{ PerPixel(x, y) };
-				m_AccumulationData[x + y * m_FinalImage->GetWidth()] += color;
-
-				glm::vec4 AcumulatedColor = m_AccumulationData[x + y * m_FinalImage->GetWidth()];
-				AcumulatedColor /= float(m_FrameIndex);
-
-				AcumulatedColor = glm::clamp(AcumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
-				m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(AcumulatedColor);
-			}
-			#endif
+			
 		});
 	#else
 
